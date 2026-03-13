@@ -5,7 +5,7 @@ import { NetworkProvider } from '@ton/blueprint';
 export async function run(provider: NetworkProvider) {
     const collectionContent = beginCell()
         .storeUint(1, 8) // off-chain tag
-        .storeStringTail('https://agent-passport.example.com/collection.json')
+        .storeStringTail('https://ghos3kick.github.io/AI-Agent-s-passport/collection.json')
         .endCell();
 
     const registry = provider.open(
