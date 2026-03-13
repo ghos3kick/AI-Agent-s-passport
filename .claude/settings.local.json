@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__TonDocs__search_ton_docs"
+    ]
+  }
+}
