@@ -39,6 +39,7 @@ export interface MintParams {
 export interface SDKConfig {
     registryAddress: string;
     tonapiKey?: string;
+    baseUrl?: string;
     network?: 'mainnet' | 'testnet';
 }
 

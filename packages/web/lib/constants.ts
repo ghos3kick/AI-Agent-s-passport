@@ -1,6 +1,6 @@
 export const REGISTRY_ADDRESS =
   process.env.NEXT_PUBLIC_REGISTRY_ADDRESS ?? 'EQplaceholder000000000000000000000000000000000000000';
-export const TONAPI_KEY = process.env.NEXT_PUBLIC_TONAPI_KEY ?? '';
+export const TONAPI_BASE_URL = '/api/tonapi';
 export const NETWORK = (process.env.NEXT_PUBLIC_NETWORK ?? 'testnet') as 'mainnet' | 'testnet';
 export const TONCONNECT_MANIFEST_URL =
   process.env.NEXT_PUBLIC_TONCONNECT_MANIFEST_URL ??

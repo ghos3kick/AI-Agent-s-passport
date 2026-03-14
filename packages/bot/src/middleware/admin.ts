@@ -10,8 +10,13 @@ export async function requireAdmin(ctx: BotContext, next: NextFunction) {
         return;
     }
 
-    if (config.adminAddress && walletAddress !== config.adminAddress) {
-        await ctx.reply('This command is for registry admins only.');
+    if (!config.adminAddress) {
+        await ctx.reply('⛔ Admin not configured. Mint is disabled.');
+        return;
+    }
+
+    if (walletAddress !== config.adminAddress) {
+        await ctx.reply('⛔ Only the admin can mint passports.');
         return;
     }
 

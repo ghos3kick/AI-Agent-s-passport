@@ -21,3 +21,11 @@ Session.vim
 .nvim/
 .emacs/
 .helix/
+
+# Security: env files
+.env
+.env.*
+.env.local
+*.pem
+*.key
+*.secret

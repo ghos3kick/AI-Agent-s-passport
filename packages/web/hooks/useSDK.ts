@@ -2,14 +2,14 @@
 
 import { useMemo } from 'react';
 import { AgentPassportSDK } from '@agent-passport/sdk';
-import { REGISTRY_ADDRESS, TONAPI_KEY, NETWORK } from '@/lib/constants';
+import { REGISTRY_ADDRESS, TONAPI_BASE_URL, NETWORK } from '@/lib/constants';
 
 export function useSDK(): AgentPassportSDK {
   return useMemo(
     () =>
       new AgentPassportSDK({
         registryAddress: REGISTRY_ADDRESS,
-        tonapiKey: TONAPI_KEY,
+        baseUrl: TONAPI_BASE_URL,
         network: NETWORK,
       }),
     [],

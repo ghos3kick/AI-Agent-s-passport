@@ -9,11 +9,12 @@
         "start": "node dist/index.js"
     },
     "dependencies": {
-        "grammy": "^1.35.0",
-        "@grammyjs/conversations": "^2.0.3",
-        "@tonconnect/sdk": "^3.0.6",
         "@agent-passport/sdk": "*",
-        "dotenv": "^16.4.7"
+        "@grammyjs/conversations": "^2.0.3",
+        "@grammyjs/ratelimiter": "^1.2.1",
+        "@tonconnect/sdk": "^3.0.6",
+        "dotenv": "^16.4.7",
+        "grammy": "^1.35.0"
     },
     "devDependencies": {
         "@types/node": "^22.17.2",

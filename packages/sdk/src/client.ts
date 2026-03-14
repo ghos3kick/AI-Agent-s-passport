@@ -33,10 +33,10 @@ export class AgentPassportSDK {
         this.registryAddress = config.registryAddress;
         this.network = config.network ?? 'testnet';
 
-        const baseUrl =
-            this.network === 'mainnet'
-                ? 'https://tonapi.io'
-                : 'https://testnet.tonapi.io';
+        const baseUrl = config.baseUrl ||
+                (this.network === 'mainnet'
+                        ? 'https://tonapi.io'
+                        : 'https://testnet.tonapi.io');
 
         const headers: Record<string, string> = {
             'Content-type': 'application/json',
