@@ -3,6 +3,7 @@ import { BotContext } from '../context';
 import { isValidTonAddress } from '@agent-passport/sdk';
 import { getTonConnect } from '../services/wallet';
 import { config } from '../config';
+import { setAdminChatId } from '../api';
 
 export function registerConnectHandler(bot: Bot<BotContext>) {
     bot.command('connect', async (ctx) => {
@@ -20,6 +21,10 @@ export function registerConnectHandler(bot: Bot<BotContext>) {
         // Simple mode: accept address as text argument
         if (addressArg && isValidTonAddress(addressArg)) {
             ctx.session.walletAddress = addressArg;
+            // Auto-detect admin for API mint
+            if (config.adminAddress && addressArg === config.adminAddress) {
+                setAdminChatId(ctx.chat!.id);
+            }
             await ctx.reply(
                 `\u2705 Wallet connected: <code>${addressArg}</code>`,
                 { parse_mode: 'HTML' },
@@ -59,6 +64,10 @@ export function registerConnectHandler(bot: Bot<BotContext>) {
                     if (wallet) {
                         const address = wallet.account.address;
                         ctx.session.walletAddress = address;
+                        // Auto-detect admin for API mint
+                        if (config.adminAddress && address === config.adminAddress) {
+                            setAdminChatId(ctx.chat!.id);
+                        }
                         ctx.reply(
                             `\u2705 Wallet connected: <code>${address}</code>`,
                             { parse_mode: 'HTML' },

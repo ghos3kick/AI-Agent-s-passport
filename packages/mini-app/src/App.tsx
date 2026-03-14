@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { HashRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
-import WalletConnect from './components/WalletConnect';
+import Home from './components/Home';
 import PassportViewer from './components/PassportViewer';
 import MintPassport from './components/MintPassport';
 import VerifyPassport from './components/VerifyPassport';
@@ -37,7 +37,7 @@ function AppContent() {
       <TelegramBackButton />
       <div className="app">
         <Routes>
-          <Route path="/" element={<WalletConnect />} />
+          <Route path="/" element={<Home />} />
           <Route path="/view" element={<PassportViewer />} />
           <Route path="/mint" element={<MintPassport />} />
           <Route path="/verify" element={<VerifyPassport />} />

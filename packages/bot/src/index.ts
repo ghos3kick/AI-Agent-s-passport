@@ -1,7 +1,11 @@
 import { createBot } from './bot';
+import { createApiServer } from './api';
 
 async function main() {
     const bot = createBot();
+
+    // Start HTTP API server for auto-mint
+    createApiServer();
 
     // Graceful shutdown
     const stop = () => {

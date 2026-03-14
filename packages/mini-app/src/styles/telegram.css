@@ -290,6 +290,47 @@ textarea.input {
   }
 }
 
+/* Home screen */
+.home-hero {
+  text-align: center;
+  padding: 20px 0 8px;
+}
+
+.home-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.home-stat-card {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 16px;
+  margin-bottom: 0;
+}
+
+.home-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--tg-theme-button-color);
+}
+
+.home-stat-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tg-theme-hint-color);
+  font-weight: 600;
+}
+
+.home-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 /* Gap utility */
 .gap-8 { gap: 8px; }
 .gap-12 { gap: 12px; }
