@@ -9,10 +9,16 @@ import {
 export async function fetchPassportByAddress(
     api: Api<unknown>,
     passportAddress: string,
+    registryAddress?: string,
 ): Promise<AgentPassportData> {
     try {
         // Get standard NFT data
         const nftItem = await api.nft.getNftItemByAddress(passportAddress);
+
+        // Verify SBT belongs to the official registry
+        if (registryAddress && nftItem.collection?.address !== registryAddress) {
+            throw new Error(`SBT ${passportAddress} not from official registry`);
+        }
 
         // Get custom passport data via get_passport_data
         const passportResult = await api.blockchain.execGetMethodForBlockchainAccount(
@@ -96,8 +102,9 @@ export async function fetchPassportByAddress(
 export async function fetchPassportMetadata(
     api: Api<unknown>,
     passportAddress: string,
+    registryAddress?: string,
 ): Promise<AgentPassportMetadata> {
-    const passport = await fetchPassportByAddress(api, passportAddress);
+    const passport = await fetchPassportByAddress(api, passportAddress, registryAddress);
 
     if (!passport.metadataUrl) {
         throw new RegistryError('Passport has no metadata URL');

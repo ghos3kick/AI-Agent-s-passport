@@ -70,7 +70,7 @@ export class AgentPassportSDK {
     // --- Passport (read) ---
 
     async getPassport(passportAddress: string): Promise<AgentPassportData> {
-        return fetchPassportByAddress(this.api, passportAddress);
+        return fetchPassportByAddress(this.api, passportAddress, this.registryAddress);
     }
 
     async getPassportByIndex(index: number): Promise<AgentPassportData> {
@@ -79,7 +79,7 @@ export class AgentPassportSDK {
     }
 
     async getPassportMetadata(passportAddress: string): Promise<AgentPassportMetadata> {
-        return fetchPassportMetadata(this.api, passportAddress);
+        return fetchPassportMetadata(this.api, passportAddress, this.registryAddress);
     }
 
     // --- Ownership ---
@@ -94,7 +94,7 @@ export class AgentPassportSDK {
             const passports: AgentPassportData[] = [];
             for (const item of result.nft_items) {
                 try {
-                    const passport = await fetchPassportByAddress(this.api, item.address);
+                    const passport = await fetchPassportByAddress(this.api, item.address, this.registryAddress);
                     passports.push(passport);
                 } catch {
                     // skip items that fail to parse
@@ -129,7 +129,7 @@ export class AgentPassportSDK {
             const passports: AgentPassportData[] = [];
             for (const item of result.nft_items) {
                 try {
-                    const passport = await fetchPassportByAddress(this.api, item.address);
+                    const passport = await fetchPassportByAddress(this.api, item.address, this.registryAddress);
                     passports.push(passport);
                 } catch {
                     // skip items that fail to parse
