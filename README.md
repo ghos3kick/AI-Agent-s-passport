@@ -167,7 +167,7 @@ Built with Next.js 16 (App Router), Tailwind v4, and TON Connect.
 
 ## 🌐 Live Demo
 
-- **Registry Contract**: [EQCvLEpNMxHY8UoUUU3ARg3ntjt9eM430w-CUt4ypPDXoP9M](https://testnet.tonviewer.com/EQCvLEpNMxHY8UoUUU3ARg3ntjt9eM430w-CUt4ypPDXoP9M)
+- **Registry Contract**: [EQDRdykyEDAj9GgM3sPnkj9Y-OM6IG3wX_QmI40emh2HBxZS](https://testnet.tonviewer.com/EQDRdykyEDAj9GgM3sPnkj9Y-OM6IG3wX_QmI40emh2HBxZS)
 - **Network**: TON Testnet
 - **GitHub**: [ghos3kick/AI-Agent-s-passport](https://github.com/ghos3kick/AI-Agent-s-passport)
 

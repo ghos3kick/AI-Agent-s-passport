@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import { ShieldCheck, ShieldX, AlertTriangle, Search } from 'lucide-react';
 import { verifyPassport } from '../hooks/useTonApi';
 import { shortenAddress } from '../utils/format';
 import PassportCard from './PassportCard';
+import TrustScore from './TrustScore';
+import { calculateTrustScoreLocal } from '../utils/reputation';
 import type { PassportData } from '../hooks/useTonApi';
 
 type VerifyStatus = 'idle' | 'loading' | 'verified' | 'revoked' | 'not-found';
@@ -42,14 +45,15 @@ export default function VerifyPassport() {
   }
 
   return (
-    <div className="page-enter flex-col gap-16">
-      <h2 style={{ fontSize: 20, fontWeight: 600 }}>Verify Passport</h2>
+    <div className="page page-enter">
+      <h2 className="page-title">Verify</h2>
+      <p className="page-subtitle">Check passport authenticity on-chain</p>
 
-      <div className="form-group">
-        <label>SBT or Owner Address</label>
+      <div className="search-input-wrapper">
+        <Search className="search-icon" />
         <input
-          className="input"
-          placeholder="EQ... or UQ... or 0:..."
+          className="search-input"
+          placeholder="Enter SBT or owner address..."
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
@@ -57,50 +61,82 @@ export default function VerifyPassport() {
       </div>
 
       <button
-        className="btn btn-primary"
+        className="btn-mint"
         onClick={handleVerify}
         disabled={status === 'loading' || !address.trim()}
+        style={{ marginBottom: 24 }}
       >
-        {status === 'loading' ? <div className="spinner" /> : 'Verify'}
+        {status === 'loading' ? 'Verifying...' : 'Verify Passport'}
       </button>
 
+      {/* Loading state */}
+      {status === 'loading' && (
+        <div style={{ padding: '20px 0' }}>
+          <div className="scanning-bar" />
+          <div className="scanning-text">Verifying on-chain...</div>
+        </div>
+      )}
+
+      {/* Verified */}
       {status === 'verified' && (
-        <div className="flex-col gap-12">
-          <div className="card text-center" style={{ padding: 20 }}>
-            <span className="badge badge-verified" style={{ fontSize: 16 }}>
-              &#9989; Verified
-            </span>
-            <p style={{ marginTop: 8, fontSize: 14, color: 'var(--tg-theme-hint-color)' }}>
-              Owner: {shortenAddress(ownerAddress, 6)}
-            </p>
+        <div className="flex-col gap-16">
+          <div className="verify-result">
+            <div className="verify-checkmark">
+              <ShieldCheck size={32} color="var(--ap-success)" />
+            </div>
+            <div className="verify-title success">Verified</div>
+            <div className="verify-subtitle">
+              Owner: <span className="mono">{shortenAddress(ownerAddress, 6)}</span>
+            </div>
           </div>
-          {passport && <PassportCard passport={passport} />}
+          {passport && (
+            <>
+              <PassportCard passport={passport} animate />
+              {(() => {
+                const ts = calculateTrustScoreLocal(passport);
+                return <TrustScore score={ts.total} level={ts.level} breakdown={ts.breakdown} />;
+              })()}
+            </>
+          )}
         </div>
       )}
 
+      {/* Revoked */}
       {status === 'revoked' && (
-        <div className="flex-col gap-12">
-          <div className="card text-center" style={{ padding: 20 }}>
-            <span className="badge badge-revoked" style={{ fontSize: 16 }}>
-              &#9888;&#65039; Revoked
-            </span>
-            <p style={{ marginTop: 8, fontSize: 14, color: 'var(--tg-theme-hint-color)' }}>
-              This passport has been revoked
-            </p>
+        <div className="flex-col gap-16">
+          <div className="verify-result">
+            <div className="verify-warning-mark">
+              <AlertTriangle size={32} color="var(--ap-warning)" />
+            </div>
+            <div className="verify-title warning">Revoked</div>
+            <div className="verify-subtitle">This passport has been revoked</div>
           </div>
-          {passport && <PassportCard passport={passport} />}
+          {passport && <PassportCard passport={passport} animate />}
         </div>
       )}
 
+      {/* Not Found */}
       {status === 'not-found' && (
-        <div className="card text-center" style={{ padding: 20 }}>
-          <span className="badge badge-not-found" style={{ fontSize: 16 }}>
-            &#10060; Not Found
-          </span>
-          <p style={{ marginTop: 8, fontSize: 14, color: 'var(--tg-theme-hint-color)' }}>
-            No passport found for this address
-          </p>
-          {error && <p style={{ marginTop: 4, fontSize: 12, color: 'var(--tg-theme-hint-color)' }}>{error}</p>}
+        <div className="verify-result">
+          <div className="verify-x-mark">
+            <ShieldX size={32} color="var(--ap-error)" />
+          </div>
+          <div className="verify-title error">Not Found</div>
+          <div className="verify-subtitle">No passport found for this address</div>
+          {error && (
+            <p style={{ marginTop: 8, fontSize: 12, color: 'var(--ap-text-muted)' }}>{error}</p>
+          )}
+        </div>
+      )}
+
+      {/* Idle empty state */}
+      {status === 'idle' && (
+        <div className="empty-state">
+          <div className="empty-state-icon">
+            <ShieldCheck size={32} strokeWidth={1.5} />
+          </div>
+          <p className="empty-state-title">Verify Authenticity</p>
+          <p className="empty-state-text">Enter an address to verify its passport status on-chain</p>
         </div>
       )}
     </div>

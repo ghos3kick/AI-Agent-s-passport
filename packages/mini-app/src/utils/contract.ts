@@ -12,6 +12,7 @@ export const TONSCAN_BASE_URL =
   NETWORK === 'mainnet' ? 'https://tonscan.org' : 'https://testnet.tonscan.org';
 
 const MINT_PASSPORT_OPCODE = 3867318038;
+const PUBLIC_MINT_PASSPORT_OPCODE = 534822672;
 
 export interface MintParams {
   owner: Address;
@@ -31,6 +32,16 @@ export function buildMintBody(params: MintParams): Cell {
     .endCell();
 }
 
+export function buildPublicMintBody(params: MintParams): Cell {
+  return beginCell()
+    .storeUint(PUBLIC_MINT_PASSPORT_OPCODE, 32)
+    .storeAddress(params.owner)
+    .storeStringRefTail(params.endpoint)
+    .storeStringRefTail(params.capabilities)
+    .storeStringRefTail(params.metadataUrl)
+    .endCell();
+}
+
 export function buildMintTransaction(mintBody: Cell) {
   return {
     validUntil: Math.floor(Date.now() / 1000) + 300,
@@ -38,6 +49,19 @@ export function buildMintTransaction(mintBody: Cell) {
       {
         address: REGISTRY_ADDRESS,
         amount: toNano('0.2').toString(),
+        payload: mintBody.toBoc().toString('base64'),
+      },
+    ],
+  };
+}
+
+export function buildPublicMintTransaction(mintBody: Cell) {
+  return {
+    validUntil: Math.floor(Date.now() / 1000) + 300,
+    messages: [
+      {
+        address: REGISTRY_ADDRESS,
+        amount: toNano('0.12').toString(), // 0.05 fee + 0.06 gas + buffer
         payload: mintBody.toBoc().toString('base64'),
       },
     ],

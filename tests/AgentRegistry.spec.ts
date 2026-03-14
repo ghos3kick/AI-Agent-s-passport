@@ -183,6 +183,178 @@ describe('AgentRegistry', () => {
         const data = await passport.getGetPassportData();
         expect(data.capabilities).toBe('new,updated');
     });
+
+    // ===== Public Mint Tests =====
+
+    it('should return default mintFee', async () => {
+        const fee = await registry.getMintFee();
+        expect(fee).toBe(toNano('0.05'));
+    });
+
+    it('should public mint with sufficient payment', async () => {
+        const user = await blockchain.treasury('user1');
+
+        const result = await registry.send(
+            user.getSender(),
+            { value: toNano('0.2') },
+            {
+                $$type: 'PublicMintPassport',
+                owner: user.address,
+                capabilities: 'trading,analytics',
+                endpoint: 'https://user-agent.com/api',
+                metadataUrl: 'https://user-agent.com/meta.json',
+            }
+        );
+
+        const passportAddress = await registry.getGetNftAddressByIndex(0n);
+        expect(result.transactions).toHaveTransaction({
+            from: registry.address,
+            to: passportAddress,
+            deploy: true,
+            success: true,
+        });
+
+        const count = await registry.getGetAgentCount();
+        expect(count).toBe(1n);
+
+        const passport = blockchain.openContract(AgentPassport.fromAddress(passportAddress));
+        const data = await passport.getGetPassportData();
+        expect(data.capabilities).toBe('trading,analytics');
+        expect(data.endpoint).toBe('https://user-agent.com/api');
+    });
+
+    it('should reject public mint with insufficient payment', async () => {
+        const user = await blockchain.treasury('user1');
+
+        const result = await registry.send(
+            user.getSender(),
+            { value: toNano('0.05') }, // Not enough (need 0.05 fee + 0.06 gas)
+            {
+                $$type: 'PublicMintPassport',
+                owner: user.address,
+                capabilities: 'test',
+                endpoint: 'https://test.com',
+                metadataUrl: 'https://test.com/m.json',
+            }
+        );
+
+        expect(result.transactions).toHaveTransaction({
+            from: user.address,
+            to: registry.address,
+            success: false,
+        });
+    });
+
+    it('should return excess on public mint overpayment', async () => {
+        const user = await blockchain.treasury('user1');
+
+        const result = await registry.send(
+            user.getSender(),
+            { value: toNano('1') }, // Overpay significantly
+            {
+                $$type: 'PublicMintPassport',
+                owner: user.address,
+                capabilities: 'test',
+                endpoint: 'https://test.com',
+                metadataUrl: 'https://test.com/m.json',
+            }
+        );
+
+        // Should have a refund message back to user
+        expect(result.transactions).toHaveTransaction({
+            from: registry.address,
+            to: user.address,
+            success: true,
+        });
+    });
+
+    // ===== SetMintFee Tests =====
+
+    it('should allow owner to set mint fee', async () => {
+        await registry.send(deployer.getSender(), { value: toNano('0.05') }, {
+            $$type: 'SetMintFee',
+            fee: toNano('0.1'),
+        });
+
+        const fee = await registry.getMintFee();
+        expect(fee).toBe(toNano('0.1'));
+    });
+
+    it('should reject SetMintFee from non-owner', async () => {
+        const attacker = await blockchain.treasury('attacker');
+
+        const result = await registry.send(attacker.getSender(), { value: toNano('0.05') }, {
+            $$type: 'SetMintFee',
+            fee: toNano('0.1'),
+        });
+
+        expect(result.transactions).toHaveTransaction({
+            from: attacker.address,
+            to: registry.address,
+            success: false,
+        });
+    });
+
+    // ===== Withdraw Tests =====
+
+    it('should allow owner to withdraw', async () => {
+        const recipient = await blockchain.treasury('recipient');
+
+        // Fund the registry: send TON directly + public mints
+        const user = await blockchain.treasury('user1');
+        for (let i = 0; i < 5; i++) {
+            await registry.send(user.getSender(), { value: toNano('2') }, {
+                $$type: 'PublicMintPassport',
+                owner: user.address,
+                capabilities: 'test',
+                endpoint: 'https://test.com',
+                metadataUrl: 'https://test.com/m.json',
+            });
+        }
+
+        // Withdraw a small amount (leave >0.1 for min balance)
+        const result = await registry.send(deployer.getSender(), { value: toNano('0.5') }, {
+            $$type: 'Withdraw',
+            amount: toNano('0.05'),
+            to: recipient.address,
+        });
+
+        expect(result.transactions).toHaveTransaction({
+            from: registry.address,
+            to: recipient.address,
+            success: true,
+        });
+    });
+
+    it('should reject withdraw from non-owner', async () => {
+        const attacker = await blockchain.treasury('attacker');
+
+        const result = await registry.send(attacker.getSender(), { value: toNano('0.05') }, {
+            $$type: 'Withdraw',
+            amount: toNano('0.1'),
+            to: attacker.address,
+        });
+
+        expect(result.transactions).toHaveTransaction({
+            from: attacker.address,
+            to: registry.address,
+            success: false,
+        });
+    });
+
+    it('should reject withdraw that drains below minimum balance', async () => {
+        const result = await registry.send(deployer.getSender(), { value: toNano('0.05') }, {
+            $$type: 'Withdraw',
+            amount: toNano('100'), // Way more than the contract has
+            to: deployer.address,
+        });
+
+        expect(result.transactions).toHaveTransaction({
+            from: deployer.address,
+            to: registry.address,
+            success: false,
+        });
+    });
 });
 
 describe('AgentPassport (SBT)', () => {

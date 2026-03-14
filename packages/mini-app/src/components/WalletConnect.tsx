@@ -1,5 +1,6 @@
 import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { useState, useEffect } from 'react';
+import { Wallet, LogOut } from 'lucide-react';
 import { shortenAddress } from '../utils/format';
 import { getPassportsByOwner } from '../hooks/useTonApi';
 import type { PassportData } from '../hooks/useTonApi';
@@ -12,10 +13,7 @@ export default function WalletConnect() {
   const [loading, setLoading] = useState(false);
 
   const walletAddress = wallet?.account?.address;
-  // Format: raw address from TON Connect is in raw format (0:hex)
-  const displayAddress = walletAddress
-    ? shortenAddress(walletAddress, 6)
-    : '';
+  const displayAddress = walletAddress ? shortenAddress(walletAddress, 6) : '';
 
   useEffect(() => {
     if (!walletAddress) {
@@ -30,43 +28,48 @@ export default function WalletConnect() {
   }, [walletAddress]);
 
   return (
-    <div className="page-enter flex-col gap-16">
-      <div style={{ textAlign: 'center', padding: '20px 0' }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Agent Passport</h1>
-        <p style={{ color: 'var(--tg-theme-hint-color)', fontSize: 14 }}>
-          On-chain identity for AI agents on TON
-        </p>
-      </div>
-
+    <div className="page page-enter">
       {!wallet ? (
-        <div className="flex-col gap-12">
-          <button
-            className="btn btn-primary"
-            onClick={() => tonConnectUI.openModal()}
-          >
+        <div style={{ textAlign: 'center', padding: '40px 0' }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: 20,
+            background: 'var(--ap-gradient-holo-subtle)',
+            border: '1px solid var(--ap-border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 16px',
+          }}>
+            <Wallet size={28} color="var(--ap-text-secondary)" />
+          </div>
+          <h2 className="page-title" style={{ marginBottom: 8 }}>My Wallet</h2>
+          <p style={{ color: 'var(--ap-text-secondary)', fontSize: 13, marginBottom: 24 }}>
+            Connect your TON wallet to view your passports
+          </p>
+          <button className="btn-mint" onClick={() => tonConnectUI.openModal()}>
             Connect Wallet
           </button>
-          <p className="text-center" style={{ color: 'var(--tg-theme-hint-color)', fontSize: 13 }}>
-            Connect your TON wallet to manage agent passports
-          </p>
         </div>
       ) : (
-        <div className="flex-col gap-12">
-          <div className="card wallet-info">
+        <>
+          <h2 className="page-title">My Wallet</h2>
+          <p className="page-subtitle">Connected passports</p>
+
+          <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
             <div>
-              <div style={{ fontSize: 12, color: 'var(--tg-theme-hint-color)' }}>Connected</div>
+              <div style={{ fontSize: 11, color: 'var(--ap-text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 4 }}>
+                Connected
+              </div>
               <div className="wallet-address">{displayAddress}</div>
             </div>
             <button
               className="btn btn-danger"
-              style={{ width: 'auto', padding: '8px 16px', fontSize: 14 }}
+              style={{ width: 'auto', padding: '8px 14px', fontSize: 13, gap: 6 }}
               onClick={() => tonConnectUI.disconnect()}
             >
-              Disconnect
+              <LogOut size={14} /> Disconnect
             </button>
           </div>
 
-          <div className="section-title mt-8">My Passports</div>
+          <div className="section-title" style={{ marginBottom: 12 }}>My Passports</div>
 
           {loading ? (
             <div className="loading-center">
@@ -75,11 +78,15 @@ export default function WalletConnect() {
           ) : passports.length > 0 ? (
             passports.map((p) => <PassportCard key={p.address} passport={p} />)
           ) : (
-            <div className="status">
-              No passports found for this wallet
+            <div className="empty-state">
+              <div className="empty-state-icon">
+                <Wallet size={32} strokeWidth={1.5} />
+              </div>
+              <p className="empty-state-title">No Passports</p>
+              <p className="empty-state-text">No passports found for this wallet</p>
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );

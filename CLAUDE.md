@@ -10,11 +10,10 @@ Agent Passport is an on-chain identity and trust verification system for AI agen
 
 ## Current Task
 
-**Deploy to testnet + integration testing:**
-1. `npx blueprint run deployRegistry` — deploy AgentRegistry
-2. Fill `.env` in `packages/bot/` and `.env.local` in `packages/web/`
-3. Mint demo passports via `/mint` in bot
-4. Record demo video + finalize README
+**Public mint live on testnet. Registry redeployed.**
+- Registry: `EQDRdykyEDAj9GgM3sPnkj9Y-OM6IG3wX_QmI40emh2HBxZS`
+- Mint demo passports via `/mint` in bot or Self Mint in Mini App
+- Record demo video + finalize README
 
 ## Project Structure
 

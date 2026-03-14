@@ -1,69 +1,125 @@
+import { useState } from 'react';
+import { BarChart3, Calendar, CheckCircle, XCircle, Link as LinkIcon, Copy, Check } from 'lucide-react';
 import type { PassportData } from '../hooks/useTonApi';
 import { shortenAddress, formatDate } from '../utils/format';
-import { TONSCAN_BASE_URL } from '../utils/contract';
+import { TONSCAN_BASE_URL, NETWORK } from '../utils/contract';
+import { calculateTrustScoreLocal } from '../utils/reputation';
 
 interface Props {
   passport: PassportData;
+  animate?: boolean;
 }
 
-export default function PassportCard({ passport }: Props) {
+function AgentAvatar({ address }: { address: string }) {
+  const clean = address.replace(/^(EQ|UQ|0:|kQ|kf)/, '');
+  const initials = clean.slice(0, 2).toUpperCase();
+  let hash = 0;
+  for (let i = 0; i < Math.min(clean.length, 8); i++) {
+    hash = clean.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = ((hash % 360) + 360) % 360;
+  const bg = `linear-gradient(135deg, hsl(${hue}, 70%, 45%), hsl(${(hue + 40) % 360}, 70%, 55%))`;
+
   return (
-    <div className="card passport-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span style={{ fontSize: 16, fontWeight: 600 }}>Passport #{passport.index}</span>
-        <span className={`badge ${passport.isActive ? 'badge-verified' : 'badge-revoked'}`}>
-          {passport.isActive ? 'Active' : 'Revoked'}
-        </span>
-      </div>
+    <div className="agent-avatar" style={{ background: bg }}>
+      <span>{initials}</span>
+    </div>
+  );
+}
 
-      <div className="field">
-        <div className="field-label">Address</div>
-        <div className="field-value mono">
-          <a
-            href={`${TONSCAN_BASE_URL}/address/${passport.address}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: 'var(--tg-theme-link-color)', textDecoration: 'none' }}
-          >
-            {shortenAddress(passport.address, 8)}
-          </a>
+export default function PassportCard({ passport, animate = false }: Props) {
+  const [copied, setCopied] = useState(false);
+  const trustScore = calculateTrustScoreLocal(passport);
+
+  const capabilities = passport.capabilities
+    ? passport.capabilities.split(',').map(c => c.trim()).filter(Boolean)
+    : [];
+
+  function handleCopy() {
+    navigator.clipboard.writeText(passport.ownerAddress).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  return (
+    <div className={`passport-card${animate ? ' passport-card-enter' : ''}`}>
+      <div className="passport-card-inner">
+        {/* Header */}
+        <div className="passport-header">
+          <span className="passport-label">Agent Passport</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="passport-trust-mini">
+              <span className="trust-dot" style={{ background: trustScore.color }} />
+              <span>{trustScore.total}/100</span>
+            </div>
+            <span className="passport-index">#{String(passport.index).padStart(4, '0')}</span>
+          </div>
         </div>
-      </div>
 
-      <div className="field">
-        <div className="field-label">Owner</div>
-        <div className="field-value mono">{shortenAddress(passport.ownerAddress, 6)}</div>
-      </div>
-
-      {passport.capabilities && (
-        <div className="field">
-          <div className="field-label">Capabilities</div>
-          <div className="field-value">{passport.capabilities}</div>
+        {/* Identity */}
+        <div className="passport-identity">
+          <AgentAvatar address={passport.ownerAddress} />
+          <div>
+            <div className="passport-name">Agent #{passport.index}</div>
+            <div className="passport-address">
+              <a
+                href={`${TONSCAN_BASE_URL}/address/${passport.ownerAddress}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="address-text"
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
+                {shortenAddress(passport.ownerAddress, 6)}
+              </a>
+              <button className="copy-btn" onClick={handleCopy} type="button">
+                {copied ? <Check size={12} /> : <Copy size={12} />}
+              </button>
+            </div>
+          </div>
         </div>
-      )}
 
-      {passport.endpoint && (
-        <div className="field">
-          <div className="field-label">Endpoint</div>
-          <div className="field-value mono" style={{ fontSize: 12 }}>{passport.endpoint}</div>
-        </div>
-      )}
+        {/* Capabilities */}
+        {capabilities.length > 0 && (
+          <div className="passport-section">
+            <div className="passport-section-label">Capabilities</div>
+            <div className="passport-caps">
+              {capabilities.map(cap => (
+                <span key={cap} className="capability-chip">{cap}</span>
+              ))}
+            </div>
+          </div>
+        )}
 
-      {passport.metadataUrl && (
-        <div className="field">
-          <div className="field-label">Metadata</div>
-          <div className="field-value mono" style={{ fontSize: 12 }}>{passport.metadataUrl}</div>
-        </div>
-      )}
+        {/* Endpoint */}
+        {passport.endpoint && passport.endpoint !== 'https://example.com' && (
+          <div className="passport-section">
+            <div className="passport-section-label">Endpoint</div>
+            <div className="passport-endpoint">{passport.endpoint}</div>
+          </div>
+        )}
 
-      <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
-        <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-          <div className="field-label">TX Count</div>
-          <div className="field-value">{passport.txCount}</div>
-        </div>
-        <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-          <div className="field-label">Created</div>
-          <div className="field-value">{formatDate(passport.createdAt)}</div>
+        <div className="passport-divider" />
+
+        {/* Footer stats */}
+        <div className="passport-footer">
+          <div className="passport-footer-item">
+            <BarChart3 size={14} />
+            <span>TX: {passport.txCount}</span>
+          </div>
+          <div className="passport-footer-item">
+            <Calendar size={14} />
+            <span>{formatDate(passport.createdAt)}</span>
+          </div>
+          <div className="passport-footer-item">
+            {passport.isActive
+              ? <><CheckCircle size={14} color="var(--ap-success)" /><span style={{ color: 'var(--ap-success)' }}>Verified</span></>
+              : <><XCircle size={14} color="var(--ap-error)" /><span style={{ color: 'var(--ap-error)' }}>Revoked</span></>
+            }
+          </div>
+          <div className="passport-footer-item">
+            <LinkIcon size={14} />
+            <span>TON {NETWORK === 'mainnet' ? 'Mainnet' : 'Testnet'}</span>
+          </div>
         </div>
       </div>
     </div>

@@ -7,4 +7,5 @@ export const config = {
     network: (process.env.NETWORK || 'testnet') as 'mainnet' | 'testnet',
     tonconnectManifestUrl: process.env.TONCONNECT_MANIFEST_URL ?? '',
     adminAddress: process.env.ADMIN_ADDRESS ?? '',
+    adminApiKey: process.env.ADMIN_API_KEY ?? '',
 };

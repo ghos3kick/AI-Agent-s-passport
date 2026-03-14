@@ -12,6 +12,22 @@ message MintPassport {
     metadataUrl: String;
 }
 
+message PublicMintPassport {
+    owner: Address;
+    endpoint: String;
+    capabilities: String;
+    metadataUrl: String;
+}
+
+message SetMintFee {
+    fee: Int as coins;
+}
+
+message Withdraw {
+    amount: Int as coins;
+    to: Address;
+}
+
 message BatchIncrementTxCount {
     queryId: Int as uint64;
     agentIndex: Int as uint64;
@@ -37,28 +53,27 @@ contract AgentRegistry with Deployable, Ownable {
     owner: Address;
     nextItemIndex: Int as uint64;
     collectionContent: Cell;
+    mintFee: Int as coins;
 
     init(owner: Address, collectionContent: Cell) {
         self.owner = owner;
         self.nextItemIndex = 0;
         self.collectionContent = collectionContent;
+        self.mintFee = ton("0.05");
     }
 
-    // Mint a new Agent Passport SBT
-    receive(msg: MintPassport) {
-        self.requireOwner();
+    // ===== Internal helper =====
 
+    fun mintInternal(owner: Address, capabilities: String, endpoint: String, metadataUrl: String) {
         let index: Int = self.nextItemIndex;
         let initData: StateInit = initOf AgentPassport(myAddress(), index);
         let itemAddress: Address = contractAddress(initData);
 
-        // Build individual content cell (off-chain tag + URL)
         let contentCell: Cell = beginCell()
             .storeUint(1, 8)
-            .storeSlice(msg.metadataUrl.asSlice())
+            .storeSlice(metadataUrl.asSlice())
             .endCell();
 
-        // Deploy the SBT item
         send(SendParameters{
             to: itemAddress,
             value: ton("0.05"),
@@ -66,16 +81,68 @@ contract AgentRegistry with Deployable, Ownable {
             code: initData.code,
             data: initData.data,
             body: SetupPassport{
-                owner: msg.owner,
+                owner: owner,
                 authority: myAddress(),
-                capabilities: msg.capabilities,
-                endpoint: msg.endpoint,
-                metadataUrl: msg.metadataUrl,
+                capabilities: capabilities,
+                endpoint: endpoint,
+                metadataUrl: metadataUrl,
                 content: contentCell,
             }.toCell(),
         });
 
         self.nextItemIndex += 1;
+    }
+
+    // ===== Mint handlers =====
+
+    // Admin mint (owner only, no fee)
+    receive(msg: MintPassport) {
+        self.requireOwner();
+        self.mintInternal(msg.owner, msg.capabilities, msg.endpoint, msg.metadataUrl);
+    }
+
+    // Public mint (anyone, pays mintFee)
+    receive(msg: PublicMintPassport) {
+        let minPayment: Int = self.mintFee + ton("0.06");
+        require(context().value >= minPayment, "Insufficient payment");
+
+        self.mintInternal(msg.owner, msg.capabilities, msg.endpoint, msg.metadataUrl);
+
+        // Return excess to sender
+        let excess: Int = context().value - self.mintFee - ton("0.06");
+        if (excess > ton("0.01")) {
+            send(SendParameters{
+                to: sender(),
+                value: excess,
+                mode: SendIgnoreErrors,
+                bounce: false,
+                body: "Mint excess".asComment(),
+            });
+        }
+    }
+
+    // ===== Fee management =====
+
+    receive(msg: SetMintFee) {
+        self.requireOwner();
+        require(msg.fee >= 0, "Fee cannot be negative");
+        self.mintFee = msg.fee;
+    }
+
+    // ===== Withdraw =====
+
+    receive(msg: Withdraw) {
+        self.requireOwner();
+        require(msg.amount > 0, "Amount must be positive");
+        require(myBalance() - msg.amount >= ton("0.1"), "Keep min balance");
+
+        send(SendParameters{
+            to: msg.to,
+            value: msg.amount,
+            mode: SendIgnoreErrors,
+            bounce: true,
+            body: "Withdraw".asComment(),
+        });
     }
 
     // Forward increment to a specific passport
@@ -138,5 +205,10 @@ contract AgentRegistry with Deployable, Ownable {
     // Custom: Total registered agents
     get fun get_agent_count(): Int {
         return self.nextItemIndex;
+    }
+
+    // Mint fee
+    get fun mintFee(): Int {
+        return self.mintFee;
     }
 }

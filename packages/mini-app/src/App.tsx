@@ -36,15 +36,13 @@ function AppContent() {
   return (
     <>
       <TelegramBackButton />
-      <div className="app">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/wallet" element={<WalletConnect />} />
-          <Route path="/view" element={<PassportViewer />} />
-          <Route path="/mint" element={<MintPassport />} />
-          <Route path="/verify" element={<VerifyPassport />} />
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/wallet" element={<WalletConnect />} />
+        <Route path="/view" element={<PassportViewer />} />
+        <Route path="/mint" element={<MintPassport />} />
+        <Route path="/verify" element={<VerifyPassport />} />
+      </Routes>
       <Navigation />
     </>
   );
