@@ -12,6 +12,8 @@
         "@agent-passport/sdk": "*",
         "@grammyjs/conversations": "^2.0.3",
         "@grammyjs/ratelimiter": "^1.2.1",
+        "@ton/crypto": "^3.3.0",
+        "@ton/ton": "^15.0.0",
         "@tonconnect/sdk": "^3.0.6",
         "cors": "^2.8.6",
         "dotenv": "^16.4.7",

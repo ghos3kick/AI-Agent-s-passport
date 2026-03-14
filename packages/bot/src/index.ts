@@ -1,7 +1,12 @@
 import { createBot } from './bot';
 import { createApiServer } from './api';
+import { initDirectWallet } from './services/directWallet';
 
 async function main() {
+    // Initialize direct wallet (mnemonic-based signing)
+    await initDirectWallet();
+    console.log('Direct wallet ready');
+
     const bot = createBot();
 
     // Start HTTP API server for auto-mint

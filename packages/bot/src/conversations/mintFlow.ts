@@ -3,7 +3,6 @@ import { InlineKeyboard } from 'grammy';
 import { BaseContext } from '../context';
 import { isValidTonAddress } from '@agent-passport/sdk';
 import { buildMintBody, sendMintTransaction } from '../services/mint';
-import { getTonConnect } from '../services/wallet';
 import { config } from '../config';
 import { Address } from '@ton/core';
 
@@ -17,7 +16,7 @@ export async function mintConversation(
     conversation: Conversation<BaseContext, BaseContext>,
     ctx: BaseContext,
 ) {
-    await ctx.reply('🔑 <b>Admin Mint Flow</b>\n\nLet\'s mint a new Agent Passport.', {
+    await ctx.reply('\ud83d\udd11 <b>Admin Mint Flow</b>\n\nLet\'s mint a new Agent Passport.', {
         parse_mode: 'HTML',
     });
 
@@ -31,7 +30,7 @@ export async function mintConversation(
             ownerAddress = input;
             break;
         }
-        await ownerCtx.reply('❌ Invalid TON address. Please try again:');
+        await ownerCtx.reply('\u274c Invalid TON address. Please try again:');
     }
 
     // Step 2: Endpoint (URL validation)
@@ -40,9 +39,9 @@ export async function mintConversation(
     while (true) {
         const endpointCtx = await conversation.waitFor('message:text');
         const input = endpointCtx.message.text.trim();
-        if (!input) { await endpointCtx.reply('⚠️ Field cannot be empty. Try again:'); continue; }
-        if (input.length > MAX_FIELD_LENGTH) { await endpointCtx.reply(`⚠️ Too long (max ${MAX_FIELD_LENGTH} chars). Try again:`); continue; }
-        if (!isValidUrl(input)) { await endpointCtx.reply('⚠️ Invalid URL format. Try again:'); continue; }
+        if (!input) { await endpointCtx.reply('\u26a0\ufe0f Field cannot be empty. Try again:'); continue; }
+        if (input.length > MAX_FIELD_LENGTH) { await endpointCtx.reply(`\u26a0\ufe0f Too long (max ${MAX_FIELD_LENGTH} chars). Try again:`); continue; }
+        if (!isValidUrl(input)) { await endpointCtx.reply('\u26a0\ufe0f Invalid URL format. Try again:'); continue; }
         endpoint = input;
         break;
     }
@@ -53,8 +52,8 @@ export async function mintConversation(
     while (true) {
         const capsCtx = await conversation.waitFor('message:text');
         const input = capsCtx.message.text.trim();
-        if (!input) { await capsCtx.reply('⚠️ Field cannot be empty. Try again:'); continue; }
-        if (input.length > MAX_FIELD_LENGTH) { await capsCtx.reply(`⚠️ Too long (max ${MAX_FIELD_LENGTH} chars). Try again:`); continue; }
+        if (!input) { await capsCtx.reply('\u26a0\ufe0f Field cannot be empty. Try again:'); continue; }
+        if (input.length > MAX_FIELD_LENGTH) { await capsCtx.reply(`\u26a0\ufe0f Too long (max ${MAX_FIELD_LENGTH} chars). Try again:`); continue; }
         capabilities = input;
         break;
     }
@@ -65,25 +64,25 @@ export async function mintConversation(
     while (true) {
         const metaCtx = await conversation.waitFor('message:text');
         const input = metaCtx.message.text.trim();
-        if (!input) { await metaCtx.reply('⚠️ Field cannot be empty. Try again:'); continue; }
-        if (input.length > MAX_FIELD_LENGTH) { await metaCtx.reply(`⚠️ Too long (max ${MAX_FIELD_LENGTH} chars). Try again:`); continue; }
-        if (!isValidUrl(input)) { await metaCtx.reply('⚠️ Invalid URL format. Try again:'); continue; }
+        if (!input) { await metaCtx.reply('\u26a0\ufe0f Field cannot be empty. Try again:'); continue; }
+        if (input.length > MAX_FIELD_LENGTH) { await metaCtx.reply(`\u26a0\ufe0f Too long (max ${MAX_FIELD_LENGTH} chars). Try again:`); continue; }
+        if (!isValidUrl(input)) { await metaCtx.reply('\u26a0\ufe0f Invalid URL format. Try again:'); continue; }
         metadataUrl = input;
         break;
     }
 
     // Step 5: Confirmation
     const keyboard = new InlineKeyboard()
-        .text('✅ Confirm', 'mint_confirm')
-        .text('❌ Cancel', 'mint_cancel');
+        .text('\u2705 Confirm', 'mint_confirm')
+        .text('\u274c Cancel', 'mint_cancel');
 
     const owner = Address.parse(ownerAddress);
     await ctx.reply(
-        `📋 <b>Mint Summary</b>\n\n` +
-        `👤 Owner: <code>${owner.toString({ bounceable: false })}</code>\n` +
-        `🌐 Endpoint: ${endpoint}\n` +
-        `⚡ Capabilities: ${capabilities}\n` +
-        `📄 Metadata: ${metadataUrl}\n\n` +
+        `\ud83d\udccb <b>Mint Summary</b>\n\n` +
+        `\ud83d\udc64 Owner: <code>${owner.toString({ bounceable: false })}</code>\n` +
+        `\ud83c\udf10 Endpoint: ${endpoint}\n` +
+        `\u26a1 Capabilities: ${capabilities}\n` +
+        `\ud83d\udcc4 Metadata: ${metadataUrl}\n\n` +
         `Confirm mint?`,
         { parse_mode: 'HTML', reply_markup: keyboard },
     );
@@ -91,26 +90,25 @@ export async function mintConversation(
     const cbCtx = await conversation.waitForCallbackQuery(['mint_confirm', 'mint_cancel']);
     if (cbCtx.callbackQuery.data === 'mint_cancel') {
         await cbCtx.answerCallbackQuery('Cancelled');
-        await cbCtx.editMessageText('❌ Mint cancelled.');
+        await cbCtx.editMessageText('\u274c Mint cancelled.');
         return;
     }
 
     await cbCtx.answerCallbackQuery('Processing...');
-    await cbCtx.editMessageText('⏳ Sending mint transaction...');
+    await cbCtx.editMessageText('\u23f3 Sending mint transaction...');
 
     try {
-        const tc = getTonConnect(ctx.from!.id);
         const mintBody = buildMintBody({ queryId: BigInt(Date.now()), owner, capabilities, endpoint, metadataUrl });
-        const result = await sendMintTransaction(tc, config.registryAddress, mintBody);
+        const result = await sendMintTransaction(config.registryAddress, mintBody);
 
         await ctx.reply(
-            `✅ <b>Mint transaction sent!</b>\n\n` +
-            `Transaction should appear shortly.\n` +
-            `Check your wallet or explorer for confirmation.`,
+            `\u2705 <b>Mint transaction sent!</b>\n\n` +
+            `TX: <code>${result}</code>\n` +
+            `Transaction should appear shortly.`,
             { parse_mode: 'HTML' },
         );
     } catch (error: unknown) {
         const msg = error instanceof Error ? error.message : 'Unknown error';
-        await ctx.reply(`❌ Mint failed: ${msg}`);
+        await ctx.reply(`\u274c Mint failed: ${msg}`);
     }
 }

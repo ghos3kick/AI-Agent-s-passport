@@ -1,5 +1,5 @@
 import { beginCell, Address, toNano, Cell } from '@ton/core';
-import TonConnect from '@tonconnect/sdk';
+import { sendTransaction } from './directWallet';
 
 // MintPassport opcode from compiled Tact contract
 const MINT_PASSPORT_OPCODE = 3867318038;
@@ -27,19 +27,13 @@ export function buildMintBody(params: MintParams): Cell {
 }
 
 export async function sendMintTransaction(
-    connector: TonConnect,
     registryAddress: string,
     mintBody: Cell,
 ): Promise<string> {
-    const result = await connector.sendTransaction({
-        validUntil: Math.floor(Date.now() / 1000) + 300,
-        messages: [
-            {
-                address: registryAddress,
-                amount: toNano('0.2').toString(),
-                payload: mintBody.toBoc().toString('base64'),
-            },
-        ],
+    const result = await sendTransaction({
+        to: registryAddress,
+        value: toNano('0.2'),
+        body: mintBody,
     });
-    return result.boc;
+    return result;
 }

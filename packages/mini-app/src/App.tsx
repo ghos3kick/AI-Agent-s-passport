@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { MemoryRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
+import { Info } from 'lucide-react';
 import Home from './components/Home';
 import WalletConnect from './components/WalletConnect';
 import PassportViewer from './components/PassportViewer';
 import MintPassport from './components/MintPassport';
 import VerifyPassport from './components/VerifyPassport';
 import Navigation from './components/Navigation';
+import HelpOverlay from './components/HelpOverlay';
 import { TONCONNECT_MANIFEST_URL } from './utils/contract';
 
 function TelegramBackButton() {
@@ -33,9 +35,20 @@ function TelegramBackButton() {
 }
 
 function AppContent() {
+  const [showHelp, setShowHelp] = useState(false);
+
   return (
     <>
       <TelegramBackButton />
+
+      <button
+        className="help-toggle"
+        onClick={() => setShowHelp(true)}
+        aria-label="Help"
+      >
+        <Info size={20} />
+      </button>
+
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/wallet" element={<WalletConnect />} />
@@ -44,6 +57,8 @@ function AppContent() {
         <Route path="/verify" element={<VerifyPassport />} />
       </Routes>
       <Navigation />
+
+      <HelpOverlay isOpen={showHelp} onClose={() => setShowHelp(false)} />
     </>
   );
 }

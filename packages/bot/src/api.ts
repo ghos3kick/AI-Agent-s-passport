@@ -2,23 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import { Address } from '@ton/core';
 import { config } from './config';
-import { getTonConnect } from './services/wallet';
 import { buildMintBody, sendMintTransaction } from './services/mint';
 import { checkMintRateLimit } from './middleware/rateLimit';
 import { getSDK } from './services/passport';
 import { calculateTrustScore } from './services/reputation';
-
-// Admin chat ID — set when admin connects via /connect
-let adminChatId: number | null = null;
-
-export function setAdminChatId(chatId: number) {
-    adminChatId = chatId;
-    console.log(`Admin chat ID set to ${chatId}`);
-}
-
-export function getAdminChatId(): number | null {
-    return adminChatId;
-}
+import { isInitialized as isWalletReady } from './services/directWallet';
 
 export function createApiServer() {
     const app = express();
@@ -30,7 +18,7 @@ export function createApiServer() {
 
     // Health check
     app.get('/api/health', (_req, res) => {
-        res.json({ status: 'ok', adminConnected: adminChatId !== null });
+        res.json({ status: 'ok', walletReady: isWalletReady() });
     });
 
     // Auto-mint endpoint
@@ -72,15 +60,9 @@ export function createApiServer() {
                 }
             }
 
-            // Check admin TonConnect session
-            if (!adminChatId) {
-                res.status(503).json({ error: 'Admin wallet not connected. Ask admin to /connect in bot.' });
-                return;
-            }
-
-            const tc = getTonConnect(adminChatId);
-            if (!tc.connected) {
-                res.status(503).json({ error: 'Admin wallet disconnected. Ask admin to reconnect.' });
+            // Check direct wallet is ready
+            if (!isWalletReady()) {
+                res.status(503).json({ error: 'Wallet not initialized. Check MNEMONIC in .env.' });
                 return;
             }
 
@@ -93,11 +75,11 @@ export function createApiServer() {
                 metadataUrl: metadata,
             });
 
-            const boc = await sendMintTransaction(tc, config.registryAddress, mintBody);
+            const txHash = await sendMintTransaction(config.registryAddress, mintBody);
 
             res.json({
                 success: true,
-                txHash: boc || 'pending',
+                txHash: txHash || 'pending',
                 message: 'Passport minted successfully',
             });
         } catch (error: any) {
