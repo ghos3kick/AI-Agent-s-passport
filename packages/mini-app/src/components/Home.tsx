@@ -1,48 +1,33 @@
-import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Component, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { shortenAddress } from '../utils/format';
-import { getRegistryInfo, getPassportsByOwner } from '../hooks/useTonApi';
-import type { PassportData } from '../hooks/useTonApi';
-import PassportCard from './PassportCard';
+import { getRegistryInfo } from '../hooks/useTonApi';
 
-export default function Home() {
-  const [tonConnectUI] = useTonConnectUI();
-  const wallet = useTonWallet();
+// Error boundary to prevent blank screen
+class HomeErrorBoundary extends Component<{ children: ReactNode }, { error: boolean }> {
+  state = { error: false };
+  static getDerivedStateFromError() { return { error: true }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="page-enter flex-col gap-16" style={{ padding: '40px 0', textAlign: 'center' }}>
+          <h2 style={{ fontSize: 20, fontWeight: 600 }}>Agent Passport</h2>
+          <p style={{ color: 'var(--tg-theme-hint-color)' }}>Something went wrong. Try reloading.</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function HomeContent() {
   const navigate = useNavigate();
-
   const [stats, setStats] = useState({ totalPassports: 0, loading: true });
-  const [passports, setPassports] = useState<PassportData[]>([]);
-  const [passportsLoading, setPassportsLoading] = useState(false);
-  const [ready, setReady] = useState(false);
-
-  const walletAddress = wallet?.account?.address;
-  const displayAddress = walletAddress ? shortenAddress(walletAddress, 6) : '';
-
-  // Delay render slightly to let Telegram WebApp initialize
-  useEffect(() => {
-    const t = setTimeout(() => setReady(true), 50);
-    return () => clearTimeout(t);
-  }, []);
 
   useEffect(() => {
-    if (!ready) return;
     getRegistryInfo()
       .then((info) => setStats({ totalPassports: info.nextItemIndex, loading: false }))
       .catch(() => setStats({ totalPassports: 0, loading: false }));
-  }, [ready]);
-
-  useEffect(() => {
-    if (!walletAddress) {
-      setPassports([]);
-      return;
-    }
-    setPassportsLoading(true);
-    getPassportsByOwner(walletAddress)
-      .then(setPassports)
-      .catch(() => setPassports([]))
-      .finally(() => setPassportsLoading(false));
-  }, [walletAddress]);
+  }, []);
 
   return (
     <div className="page-enter flex-col gap-16">
@@ -75,61 +60,30 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Actions */}
-      {!wallet ? (
-        <div className="flex-col gap-12">
-          <button className="btn btn-primary" onClick={() => tonConnectUI.openModal()}>
-            Connect Wallet
-          </button>
-          <p className="text-center" style={{ color: 'var(--tg-theme-hint-color)', fontSize: 13 }}>
-            Connect your TON wallet to get started
-          </p>
-        </div>
-      ) : (
-        <div className="flex-col gap-12">
-          <div className="card wallet-info">
-            <div>
-              <div style={{ fontSize: 12, color: 'var(--tg-theme-hint-color)' }}>Connected</div>
-              <div className="wallet-address">{displayAddress}</div>
-            </div>
-            <button
-              className="btn btn-danger"
-              style={{ width: 'auto', padding: '8px 16px', fontSize: 14 }}
-              onClick={() => tonConnectUI.disconnect()}
-            >
-              Disconnect
-            </button>
-          </div>
-
-          <div className="home-actions">
-            <button className="btn btn-primary" onClick={() => navigate('/mint')}>
-              Get Passport
-            </button>
-            <button className="btn btn-secondary" onClick={() => navigate('/view')}>
-              Search Passport
-            </button>
-            <button className="btn btn-secondary" onClick={() => navigate('/verify')}>
-              Verify Passport
-            </button>
-          </div>
-
-          {/* My Passports */}
-          <div className="section-title mt-8">My Passports</div>
-          {passportsLoading ? (
-            <div className="loading-center">
-              <div className="spinner" />
-            </div>
-          ) : passports.length > 0 ? (
-            passports.map((p) => <PassportCard key={p.address} passport={p} />)
-          ) : (
-            <div className="status">No passports found for this wallet</div>
-          )}
-        </div>
-      )}
+      {/* Quick Actions */}
+      <div className="home-actions">
+        <button className="btn btn-primary" onClick={() => navigate('/mint')}>
+          Get Passport
+        </button>
+        <button className="btn btn-secondary" onClick={() => navigate('/view')}>
+          Search Passport
+        </button>
+        <button className="btn btn-secondary" onClick={() => navigate('/verify')}>
+          Verify Passport
+        </button>
+      </div>
 
       <p className="text-center" style={{ marginTop: 16, fontSize: 12, color: 'var(--tg-theme-hint-color)' }}>
         Powered by TON Blockchain
       </p>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <HomeErrorBoundary>
+      <HomeContent />
+    </HomeErrorBoundary>
   );
 }

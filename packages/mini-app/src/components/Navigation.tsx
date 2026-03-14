@@ -10,12 +10,12 @@ export default function Navigation() {
         </svg>
         Home
       </NavLink>
-      <NavLink to="/view" className={({ isActive }) => isActive ? 'active' : ''}>
+      <NavLink to="/wallet" className={({ isActive }) => isActive ? 'active' : ''}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8"/>
-          <path d="m21 21-4.3-4.3"/>
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
         </svg>
-        Search
+        Wallet
       </NavLink>
       <NavLink to="/mint" className={({ isActive }) => isActive ? 'active' : ''}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -24,6 +24,13 @@ export default function Navigation() {
           <path d="M8 12h8"/>
         </svg>
         Mint
+      </NavLink>
+      <NavLink to="/view" className={({ isActive }) => isActive ? 'active' : ''}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.3-4.3"/>
+        </svg>
+        Search
       </NavLink>
       <NavLink to="/verify" className={({ isActive }) => isActive ? 'active' : ''}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
