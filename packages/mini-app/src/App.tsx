@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import Home from './components/Home';
 import WalletConnect from './components/WalletConnect';
@@ -8,15 +8,6 @@ import MintPassport from './components/MintPassport';
 import VerifyPassport from './components/VerifyPassport';
 import Navigation from './components/Navigation';
 import { TONCONNECT_MANIFEST_URL } from './utils/contract';
-
-// Telegram WebApp injects #tgWebAppData=... into the URL hash,
-// which conflicts with HashRouter. Clean it up before React mounts.
-(function cleanTelegramHash() {
-  const hash = window.location.hash;
-  if (hash && !hash.startsWith('#/')) {
-    window.location.hash = '#/';
-  }
-})();
 
 function TelegramBackButton() {
   const location = useLocation();
@@ -52,7 +43,6 @@ function AppContent() {
           <Route path="/view" element={<PassportViewer />} />
           <Route path="/mint" element={<MintPassport />} />
           <Route path="/verify" element={<VerifyPassport />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
       <Navigation />
@@ -71,9 +61,9 @@ export default function App() {
 
   return (
     <TonConnectUIProvider manifestUrl={TONCONNECT_MANIFEST_URL}>
-      <HashRouter>
+      <MemoryRouter initialEntries={['/']}>
         <AppContent />
-      </HashRouter>
+      </MemoryRouter>
     </TonConnectUIProvider>
   );
 }
