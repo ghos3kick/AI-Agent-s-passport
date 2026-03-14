@@ -1,8 +1,13 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { TonConnectButton } from '@tonconnect/ui-react';
 import { Container } from './Container';
+
+const TonConnectButton = dynamic(
+  () => import('@tonconnect/ui-react').then((mod) => ({ default: mod.TonConnectButton })),
+  { ssr: false, loading: () => <div className="h-10 w-32 rounded-lg animate-shimmer" /> },
+);
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -17,7 +22,7 @@ export function Header() {
       <Container>
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg hover:opacity-90">
-            🤖 Agent Passport
+            Agent Passport
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
