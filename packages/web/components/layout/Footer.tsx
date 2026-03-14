@@ -4,12 +4,12 @@ import { shortenAddress } from '@/lib/utils';
 
 export function Footer() {
   return (
-    <footer className="bg-gray-50 border-t border-gray-200 mt-auto">
+    <footer className="bg-ap-secondary/50 border-t border-ap-divider mt-auto">
       <Container>
-        <div className="py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+        <div className="py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-ap-text-muted">
           <div className="flex items-center gap-2">
             <span>🤖 Agent Passport Registry</span>
-            <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-xs font-medium">
+            <span className="inline-flex items-center rounded-full bg-ap-accent/10 text-ap-accent px-2 py-0.5 text-xs font-medium">
               {NETWORK}
             </span>
           </div>

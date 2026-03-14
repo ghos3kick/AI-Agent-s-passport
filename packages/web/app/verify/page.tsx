@@ -13,12 +13,12 @@ export default function VerifyPage() {
 
   return (
     <Container className="py-10 max-w-2xl">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Verify Agent</h1>
-      <p className="text-gray-500 mb-8">
+      <h1 className="text-3xl font-bold text-ap-text mb-2">Verify Agent</h1>
+      <p className="text-ap-text-secondary mb-8">
         Check if a wallet address owns an active Agent Passport.
       </p>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mb-6">
+      <div className="rounded-2xl border border-ap-border bg-ap-secondary p-6 shadow-[0_2px_8px_rgba(0,0,0,0.3)] mb-6">
         <VerifyForm onVerify={setAddress} loading={isLoading} />
       </div>
 

@@ -13,7 +13,7 @@ const navLinks = [
 
 export function Header() {
   return (
-    <header className="bg-[#0098EA] text-white shadow-md">
+    <header className="bg-ap-secondary/80 backdrop-blur-lg text-ap-text border-b border-ap-border sticky top-0 z-50">
       <Container>
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg hover:opacity-90">

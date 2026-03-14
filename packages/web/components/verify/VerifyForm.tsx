@@ -40,7 +40,7 @@ export function VerifyForm({ onVerify, loading }: VerifyFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-ap-text-secondary mb-1">
           TON Wallet Address
         </label>
         <input
@@ -48,16 +48,16 @@ export function VerifyForm({ onVerify, loading }: VerifyFormProps) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="EQBx..."
-          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-lg border border-ap-border bg-ap-input px-4 py-2.5 font-mono text-sm text-ap-text placeholder:text-ap-text-muted focus:outline-none focus:ring-2 focus:ring-ap-accent/40 focus:border-ap-accent/40 transition-colors"
         />
-        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-1 text-sm text-ap-error">{error}</p>}
       </div>
 
       <div className="flex gap-3">
         <button
           type="submit"
           disabled={loading}
-          className="flex-1 rounded-lg bg-[#0098EA] text-white px-4 py-2.5 font-medium hover:bg-blue-600 disabled:opacity-50 transition-colors"
+          className="flex-1 rounded-lg bg-ap-accent text-white px-4 py-2.5 font-medium hover:bg-ap-accent-hover hover:-translate-y-px hover:shadow-lg hover:shadow-ap-accent/20 disabled:opacity-40 transition-all"
         >
           {loading ? 'Verifying...' : 'Verify'}
         </button>
@@ -65,7 +65,7 @@ export function VerifyForm({ onVerify, loading }: VerifyFormProps) {
           <button
             type="button"
             onClick={handleUseWallet}
-            className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium hover:bg-gray-50 transition-colors"
+            className="rounded-lg border border-ap-border bg-ap-elevated px-4 py-2.5 text-sm font-medium text-ap-text-secondary hover:border-ap-accent/30 transition-colors"
           >
             Use connected wallet
           </button>

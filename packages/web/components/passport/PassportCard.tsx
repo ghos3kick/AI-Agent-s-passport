@@ -15,9 +15,9 @@ export function PassportCard({ passport }: PassportCardProps) {
 
   return (
     <Link href={`/passport/${passport.address}`}>
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer h-full flex flex-col gap-3">
+      <div className="rounded-2xl border border-ap-border bg-ap-secondary p-5 hover:border-ap-accent/40 hover:-translate-y-0.5 transition-all cursor-pointer h-full flex flex-col gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.3)]">
         <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-gray-900">🤖 #{passport.index}</span>
+          <span className="text-lg font-bold text-ap-text">🤖 #{passport.index}</span>
           <PassportStatus isActive={passport.isActive} revokedAt={passport.revokedAt} />
         </div>
 
@@ -34,24 +34,24 @@ export function PassportCard({ passport }: PassportCardProps) {
           </div>
         )}
 
-        <div className="text-sm text-gray-600 space-y-1 mt-auto">
+        <div className="text-sm text-ap-text-secondary space-y-1 mt-auto">
           {passport.endpoint && (
             <div className="truncate">
-              <span className="text-gray-400">Endpoint: </span>
+              <span className="text-ap-text-muted">Endpoint: </span>
               <span className="font-mono">{passport.endpoint}</span>
             </div>
           )}
           <div>
-            <span className="text-gray-400">TX: </span>
+            <span className="text-ap-text-muted">TX: </span>
             <span className="font-semibold">{passport.txCount}</span>
           </div>
           <div className="truncate">
-            <span className="text-gray-400">Owner: </span>
+            <span className="text-ap-text-muted">Owner: </span>
             <span className="font-mono text-xs">{shortenAddress(passport.ownerAddress)}</span>
           </div>
         </div>
 
-        <div className="text-xs text-blue-600 font-medium mt-1">View Details →</div>
+        <div className="text-xs text-ap-accent font-medium mt-1">View Details →</div>
       </div>
     </Link>
   );

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0e1a;
+  --foreground: #f1f5f9;
 }
 
 @theme inline {
@@ -10,17 +10,51 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-ap-primary: #0a0e1a;
+  --color-ap-secondary: #111827;
+  --color-ap-elevated: #1a2236;
+  --color-ap-input: #0d1425;
+
+  --color-ap-accent: #3b82f6;
+  --color-ap-accent-hover: #2563eb;
+  --color-ap-success: #10b981;
+  --color-ap-error: #ef4444;
+  --color-ap-warning: #f59e0b;
+
+  --color-ap-text: #f1f5f9;
+  --color-ap-text-secondary: #94a3b8;
+  --color-ap-text-muted: #475569;
+
+  --color-ap-border: rgba(59, 130, 246, 0.12);
+  --color-ap-border-focus: rgba(59, 130, 246, 0.4);
+  --color-ap-divider: rgba(255, 255, 255, 0.06);
+  --color-ap-glow: rgba(59, 130, 246, 0.15);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Animations */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out both;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #1a2236 25%, #243049 50%, #1a2236 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }

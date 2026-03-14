@@ -13,13 +13,13 @@ export default function MyPassportsPage() {
 
   return (
     <Container className="py-10">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">My Passports</h1>
-      <p className="text-gray-500 mb-8">Agent Passports owned by your connected wallet.</p>
+      <h1 className="text-3xl font-bold text-ap-text mb-2">My Passports</h1>
+      <p className="text-ap-text-secondary mb-8">Agent Passports owned by your connected wallet.</p>
 
       {!address ? (
         <div className="flex flex-col items-center justify-center py-20 gap-6">
           <div className="text-5xl">🔗</div>
-          <p className="text-gray-500 text-lg">Connect your wallet to see your passports.</p>
+          <p className="text-ap-text-secondary text-lg">Connect your wallet to see your passports.</p>
           <ConnectButton />
         </div>
       ) : isLoading ? (

@@ -23,11 +23,11 @@ export function CopyButton({ text, className = '' }: CopyButtonProps) {
   return (
     <button
       onClick={handleCopy}
-      className={`inline-flex items-center text-gray-400 hover:text-gray-600 transition-colors ${className}`}
+      className={`inline-flex items-center text-ap-text-muted hover:text-ap-text-secondary transition-colors ${className}`}
       title="Copy to clipboard"
     >
       {copied ? (
-        <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-4 h-4 text-ap-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
       ) : (

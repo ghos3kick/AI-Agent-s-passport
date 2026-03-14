@@ -16,19 +16,19 @@ export function PassportDetail({ passport }: PassportDetailProps) {
   const capabilities = formatCapabilities(passport.capabilities);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in-up">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">🤖 Agent Passport #{passport.index}</h1>
-          <p className="mt-1 font-mono text-sm text-gray-500">{passport.address}</p>
+          <h1 className="text-3xl font-bold text-ap-text">🤖 Agent Passport #{passport.index}</h1>
+          <p className="mt-1 font-mono text-sm text-ap-text-muted">{passport.address}</p>
         </div>
         <PassportStatus isActive={passport.isActive} revokedAt={passport.revokedAt} />
       </div>
 
       {/* Main info */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">Passport Info</h2>
+      <div className="rounded-2xl border border-ap-border bg-ap-secondary p-6 shadow-[0_2px_8px_rgba(0,0,0,0.3)] space-y-4">
+        <h2 className="text-lg font-semibold text-ap-text border-b border-ap-divider pb-2">Passport Info</h2>
 
         <Row label="Owner">
           <AddressLink address={passport.ownerAddress} />
@@ -40,7 +40,7 @@ export function PassportDetail({ passport }: PassportDetailProps) {
               href={passport.endpoint}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:underline text-sm break-all"
+              className="text-ap-accent hover:underline text-sm break-all"
             >
               {passport.endpoint}
             </a>
@@ -73,8 +73,8 @@ export function PassportDetail({ passport }: PassportDetailProps) {
       </div>
 
       {/* TEP-85 */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">TEP-85 SBT Details</h2>
+      <div className="rounded-2xl border border-ap-border bg-ap-secondary p-6 shadow-[0_2px_8px_rgba(0,0,0,0.3)] space-y-4">
+        <h2 className="text-lg font-semibold text-ap-text border-b border-ap-divider pb-2">TEP-85 SBT Details</h2>
 
         <Row label="Authority">
           <AddressLink address={passport.authorityAddress} />
@@ -90,16 +90,16 @@ export function PassportDetail({ passport }: PassportDetailProps) {
       </div>
 
       {/* Raw data */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="rounded-2xl border border-ap-border bg-ap-secondary shadow-[0_2px_8px_rgba(0,0,0,0.3)]">
         <button
           onClick={() => setRawOpen((v) => !v)}
-          className="w-full flex items-center justify-between p-6 text-left font-semibold text-gray-900"
+          className="w-full flex items-center justify-between p-6 text-left font-semibold text-ap-text"
         >
           Raw Data (JSON)
-          <span className="text-gray-400">{rawOpen ? '▲' : '▼'}</span>
+          <span className="text-ap-text-muted">{rawOpen ? '▲' : '▼'}</span>
         </button>
         {rawOpen && (
-          <pre className="px-6 pb-6 text-xs font-mono text-gray-700 overflow-auto bg-gray-50 rounded-b-xl">
+          <pre className="px-6 pb-6 text-xs font-mono text-ap-text-secondary overflow-auto bg-ap-primary/50 rounded-b-2xl">
             {JSON.stringify(passport, null, 2)}
           </pre>
         )}
@@ -111,8 +111,8 @@ export function PassportDetail({ passport }: PassportDetailProps) {
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
-      <span className="w-32 text-sm font-medium text-gray-500 shrink-0">{label}</span>
-      <div className="text-sm text-gray-900">{children}</div>
+      <span className="w-32 text-sm font-medium text-ap-text-muted shrink-0 uppercase tracking-wide">{label}</span>
+      <div className="text-sm text-ap-text">{children}</div>
     </div>
   );
 }

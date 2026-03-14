@@ -11,7 +11,7 @@ interface AddressLinkProps {
 }
 
 export function AddressLink({ address, shorten = true, className = '' }: AddressLinkProps) {
-  if (!address) return <span className="text-gray-400">—</span>;
+  if (!address) return <span className="text-ap-text-muted">—</span>;
   const display = shorten ? shortenAddress(address) : address;
 
   return (
@@ -20,7 +20,7 @@ export function AddressLink({ address, shorten = true, className = '' }: Address
         href={`${EXPLORER_BASE}/${address}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="font-mono text-sm text-blue-600 hover:underline"
+        className="font-mono text-sm text-ap-accent hover:underline"
       >
         {display}
       </a>
