@@ -1,12 +1,12 @@
 :root {
-  /* Fallback values for browser testing outside Telegram */
-  --tg-theme-bg-color: #ffffff;
-  --tg-theme-text-color: #000000;
-  --tg-theme-hint-color: #999999;
-  --tg-theme-link-color: #2678b6;
-  --tg-theme-button-color: #2678b6;
+  /* Fallback values — dark theme for browser testing outside Telegram */
+  --tg-theme-bg-color: #1a1a2e;
+  --tg-theme-text-color: #e0e0e0;
+  --tg-theme-hint-color: #7a7a8e;
+  --tg-theme-link-color: #4ea8de;
+  --tg-theme-button-color: #4ea8de;
   --tg-theme-button-text-color: #ffffff;
-  --tg-theme-secondary-bg-color: #f0f0f0;
+  --tg-theme-secondary-bg-color: #25253e;
 }
 
 * {

@@ -14,15 +14,23 @@ export default function Home() {
   const [stats, setStats] = useState({ totalPassports: 0, loading: true });
   const [passports, setPassports] = useState<PassportData[]>([]);
   const [passportsLoading, setPassportsLoading] = useState(false);
+  const [ready, setReady] = useState(false);
 
   const walletAddress = wallet?.account?.address;
   const displayAddress = walletAddress ? shortenAddress(walletAddress, 6) : '';
 
+  // Delay render slightly to let Telegram WebApp initialize
   useEffect(() => {
+    const t = setTimeout(() => setReady(true), 50);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
     getRegistryInfo()
       .then((info) => setStats({ totalPassports: info.nextItemIndex, loading: false }))
       .catch(() => setStats({ totalPassports: 0, loading: false }));
-  }, []);
+  }, [ready]);
 
   useEffect(() => {
     if (!walletAddress) {
