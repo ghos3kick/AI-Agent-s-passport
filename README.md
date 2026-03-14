@@ -171,6 +171,14 @@ Built with Next.js 16 (App Router), Tailwind v4, and TON Connect.
 - **Network**: TON Testnet
 - **GitHub**: [ghos3kick/AI-Agent-s-passport](https://github.com/ghos3kick/AI-Agent-s-passport)
 
+## 📚 Documentation
+
+- [API Reference](docs/API.md) — REST API endpoints, request/response examples
+- [Architecture](docs/ARCHITECTURE.md) — System overview and Architecture Decision Records
+- [Smart Contracts](docs/CONTRACTS.md) — Contract messages, get-methods, fees, security model
+- [Trust Score](docs/TRUST_SCORE.md) — Reputation formula, scoring levels, examples
+- [Self-Hosting](docs/SELF_HOSTING.md) — Deployment guide with environment variables and nginx config
+
 ## 📄 License
 
 MIT — see [LICENSE](LICENSE)
