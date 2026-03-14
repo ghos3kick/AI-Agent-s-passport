@@ -17,20 +17,20 @@ Agent Passport is an SBT-based identity and trust verification system for AI age
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                  TON Blockchain (testnet)                │
+│                  TON Blockchain (testnet)               │
 │  ┌───────────────────┐    ┌──────────────────────────┐  │
-│  │  AgentRegistry     │───▶│  AgentPassport (SBT)     │  │
-│  │  TEP-62 Collection │    │  Non-transferable, TEP-85│  │
+│  │  AgentRegistry     │───▶│  AgentPassport (SBT)    │  │
+│  │  TEP-62 Collection │    │  Non-transferable, TEP-85│ │
 │  └─────────┬─────────┘    └──────────────────────────┘  │
-│            │                                             │
-└────────────┼─────────────────────────────────────────────┘
+│            │                                            │
+└────────────┼────────────────────────────────────────────┘
              │
    ┌─────────┴──────────────────────────────┐
    │         @agent-passport/sdk            │
    │   TypeScript · tonapi.io · @ton/core   │
    └──┬─────────────────────────────────┬───┘
       │                                 │
- ┌────▼─────────┐              ┌───────▼──────────┐
+ ┌────▼──────────┐              ┌───────▼──────────┐
  │  Telegram Bot │              │  Web Dashboard   │
  │  grammY v1    │              │  Next.js 16      │
  │  TON Connect  │              │  Tailwind v4     │
