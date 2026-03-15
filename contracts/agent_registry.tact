@@ -49,6 +49,9 @@ struct CollectionData {
 
 // ===== Contract =====
 
+const PASSPORT_DEPLOY_COST: Int = ton("0.05");
+const GAS_RESERVE: Int = ton("0.06");
+
 contract AgentRegistry with Deployable, Ownable {
     owner: Address;
     nextItemIndex: Int as uint64;
@@ -76,7 +79,7 @@ contract AgentRegistry with Deployable, Ownable {
 
         send(SendParameters{
             to: itemAddress,
-            value: ton("0.05"),
+            value: PASSPORT_DEPLOY_COST,
             mode: SendPayGasSeparately,
             code: initData.code,
             data: initData.data,
@@ -103,19 +106,19 @@ contract AgentRegistry with Deployable, Ownable {
 
     // Public mint (anyone, pays mintFee)
     receive(msg: PublicMintPassport) {
-        let minPayment: Int = self.mintFee + ton("0.06");
+        let minPayment: Int = self.mintFee + GAS_RESERVE;
         require(context().value >= minPayment, "Insufficient payment");
 
         self.mintInternal(msg.owner, msg.capabilities, msg.endpoint, msg.metadataUrl);
 
         // Return excess to sender
-        let excess: Int = context().value - self.mintFee - ton("0.06");
+        let excess: Int = context().value - self.mintFee - GAS_RESERVE;
         if (excess > ton("0.01")) {
             send(SendParameters{
                 to: sender(),
                 value: excess,
                 mode: SendIgnoreErrors,
-                bounce: false,
+                bounce: true,
                 body: "Mint excess".asComment(),
             });
         }

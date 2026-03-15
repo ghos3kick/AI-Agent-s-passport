@@ -29,3 +29,14 @@ Session.vim
 *.pem
 *.key
 *.secret
+
+# Claude Code
+.claude/
+.skills/
+
+# Documentation & tasks (kept locally)
+*.md
+tasks/
+
+# Windows Zone.Identifier files
+*:Zone.Identifier

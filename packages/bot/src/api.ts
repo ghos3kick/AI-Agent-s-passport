@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import crypto from 'crypto';
 import { Address } from '@ton/core';
 import { config } from './config';
 import { buildMintBody, sendMintTransaction } from './services/mint';
@@ -8,17 +9,32 @@ import { getSDK } from './services/passport';
 import { calculateTrustScore } from './services/reputation';
 import { isInitialized as isWalletReady } from './services/directWallet';
 
+function isValidHttpUrl(str: string): boolean {
+    try {
+        const url = new URL(str);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+
+function timingSafeEqual(a: string, b: string): boolean {
+    if (a.length !== b.length) return false;
+    return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
+
 export function createApiServer() {
     const app = express();
 
-    app.use(cors({
-        origin: '*', // Allow all origins for hackathon demo
-    }));
-    app.use(express.json());
+    const corsOrigins = process.env.CORS_ORIGINS?.split(',').map(s => s.trim()).filter(Boolean);
+    if (corsOrigins && corsOrigins.length > 0) {
+        app.use(cors({ origin: corsOrigins }));
+    }
+    app.use(express.json({ limit: '10kb' }));
 
-    // Health check
+    // Health check — no wallet state leak
     app.get('/api/health', (_req, res) => {
-        res.json({ status: 'ok', walletReady: isWalletReady() });
+        res.json({ status: 'ok' });
     });
 
     // Auto-mint endpoint
@@ -49,9 +65,19 @@ export function createApiServer() {
                 return;
             }
 
+            // Validate URLs
+            if (!isValidHttpUrl(endpoint)) {
+                res.status(400).json({ error: 'endpoint must be a valid http/https URL' });
+                return;
+            }
+            if (!isValidHttpUrl(metadata)) {
+                res.status(400).json({ error: 'metadata must be a valid http/https URL' });
+                return;
+            }
+
             // Rate limiting — skip if valid admin API key provided
             const apiKey = req.headers['x-admin-api-key'] as string | undefined;
-            const hasValidKey = config.adminApiKey && apiKey === config.adminApiKey;
+            const hasValidKey = config.adminApiKey && apiKey && timingSafeEqual(apiKey, config.adminApiKey);
             if (!hasValidKey) {
                 const identifier = req.ip || 'unknown';
                 if (!checkMintRateLimit(identifier)) {
@@ -84,10 +110,7 @@ export function createApiServer() {
             });
         } catch (error: any) {
             console.error('Auto-mint error:', error);
-            res.status(500).json({
-                error: 'Mint failed',
-                details: error.message,
-            });
+            res.status(500).json({ error: 'Mint failed' });
         }
     });
 
@@ -104,6 +127,15 @@ export function createApiServer() {
             const MAX_LEN = 256;
             if (endpoint.length > MAX_LEN || capabilities.length > MAX_LEN || metadata.length > MAX_LEN) {
                 res.status(400).json({ error: 'Field too long (max 256 chars)' });
+                return;
+            }
+
+            if (!isValidHttpUrl(endpoint)) {
+                res.status(400).json({ error: 'endpoint must be a valid http/https URL' });
+                return;
+            }
+            if (!isValidHttpUrl(metadata)) {
+                res.status(400).json({ error: 'metadata must be a valid http/https URL' });
                 return;
             }
 
@@ -146,6 +178,14 @@ export function createApiServer() {
 
     // Rate limiter for reputation endpoint (5 req/sec per IP)
     const reputationRateMap = new Map<string, number[]>();
+    setInterval(() => {
+        const now = Date.now();
+        for (const [ip, timestamps] of reputationRateMap) {
+            const valid = timestamps.filter(t => now - t < 1000);
+            if (valid.length === 0) reputationRateMap.delete(ip);
+            else reputationRateMap.set(ip, valid);
+        }
+    }, 60_000);
     function checkReputationRate(ip: string): boolean {
         const now = Date.now();
         const window = 1000; // 1 second

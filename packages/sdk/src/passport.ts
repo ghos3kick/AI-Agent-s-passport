@@ -46,9 +46,9 @@ export async function fetchPassportByAddress(
             capabilities = decoded.capabilities ?? '';
             endpoint = decoded.endpoint ?? '';
             metadataUrl = decoded.metadataUrl ?? decoded.metadata_url ?? '';
-            createdAt = Number(decoded.createdAt ?? decoded.created_at ?? 0);
-            txCount = Number(decoded.txCount ?? decoded.tx_count ?? 0);
-            revokedAt = Number(decoded.revokedAt ?? decoded.revoked_at ?? 0);
+            createdAt = parseInt(String(decoded.createdAt ?? decoded.created_at ?? 0), 10);
+            txCount = parseInt(String(decoded.txCount ?? decoded.tx_count ?? 0), 10);
+            revokedAt = parseInt(String(decoded.revokedAt ?? decoded.revoked_at ?? 0), 10);
             if (decoded.owner) ownerAddress = decoded.owner;
         } else {
             // Fallback: parse from stack
@@ -59,9 +59,9 @@ export async function fetchPassportByAddress(
                 capabilities = parseStackValue(stack[1]);
                 endpoint = parseStackValue(stack[2]);
                 metadataUrl = parseStackValue(stack[3]);
-                createdAt = Number(stack[4]?.num ?? '0');
-                txCount = Number(stack[5]?.num ?? '0');
-                revokedAt = Number(stack[6]?.num ?? '0');
+                createdAt = parseInt(stack[4]?.num ?? '0', 10);
+                txCount = parseInt(stack[5]?.num ?? '0', 10);
+                revokedAt = parseInt(stack[6]?.num ?? '0', 10);
             }
         }
 
@@ -110,12 +110,28 @@ export async function fetchPassportMetadata(
         throw new RegistryError('Passport has no metadata URL');
     }
 
-    const response = await fetch(passport.metadataUrl);
-    if (!response.ok) {
-        throw new RegistryError(`Failed to fetch metadata: ${response.status}`);
+    // SSRF protection — only allow http/https
+    let parsedUrl: URL;
+    try {
+        parsedUrl = new URL(passport.metadataUrl);
+    } catch {
+        throw new RegistryError('Invalid metadata URL');
+    }
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        throw new RegistryError('Metadata URL must use http or https');
     }
 
-    return (await response.json()) as AgentPassportMetadata;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    try {
+        const response = await fetch(passport.metadataUrl, { signal: controller.signal });
+        if (!response.ok) {
+            throw new RegistryError(`Failed to fetch metadata: ${response.status}`);
+        }
+        return (await response.json()) as AgentPassportMetadata;
+    } finally {
+        clearTimeout(timeout);
+    }
 }
 
 function parseStackValue(record: { type: string; num?: string; cell?: string; slice?: string }): string {

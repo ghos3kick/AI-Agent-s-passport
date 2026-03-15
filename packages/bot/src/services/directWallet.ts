@@ -19,6 +19,7 @@ export async function initDirectWallet() {
     }
 
     keyPair = await mnemonicToPrivateKey(words);
+    words.fill('');
 
     wallet = WalletContractV4.create({
         publicKey: keyPair.publicKey,
@@ -82,7 +83,7 @@ export async function sendTransaction(params: {
                 to: params.to,
                 value: params.value,
                 body: params.body,
-                bounce: false,
+                bounce: true,
             }),
         ],
     }));

@@ -5,12 +5,20 @@ const TONAPI_BASE =
     ? 'https://testnet.tonapi.io'
     : 'https://tonapi.io';
 
+const ALLOWED_PREFIXES = ['v2/accounts', 'v2/nfts', 'v2/blockchain'];
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
   const pathStr = path.join('/');
+
+  // Path traversal protection
+  if (!ALLOWED_PREFIXES.some(prefix => pathStr.startsWith(prefix))) {
+    return NextResponse.json({ error: 'Forbidden path' }, { status: 403 });
+  }
+
   const searchParams = request.nextUrl.searchParams.toString();
   const url = `${TONAPI_BASE}/${pathStr}${searchParams ? '?' + searchParams : ''}`;
 
