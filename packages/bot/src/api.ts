@@ -25,6 +25,7 @@ function timingSafeEqual(a: string, b: string): boolean {
 
 export function createApiServer() {
     const app = express();
+    app.set('trust proxy', 'loopback');
 
     const corsOrigins = process.env.CORS_ORIGINS?.split(',').map(s => s.trim()).filter(Boolean);
     if (corsOrigins && corsOrigins.length > 0) {

@@ -284,6 +284,174 @@ describe('AgentPassportSDK', () => {
             expect(results[0].capabilities).toContain('translation');
         });
     });
+
+    describe('getPassport — stack fallback parsing', () => {
+        it('should parse passport data from stack when decoded is absent', async () => {
+            mockGetNftItemByAddress.mockResolvedValue(makeNftItem());
+            mockExecGetMethod
+                .mockResolvedValueOnce({
+                    success: true,
+                    exit_code: 0,
+                    stack: [
+                        { type: 'slice', slice: OWNER_ADDR },
+                        { type: 'cell', cell: 'translation,summarization' },
+                        { type: 'cell', cell: 'https://agent.example.com/api' },
+                        { type: 'cell', cell: 'https://agent.example.com/metadata.json' },
+                        { type: 'num', num: '1710000000' },
+                        { type: 'num', num: '42' },
+                        { type: 'num', num: '0' },
+                    ],
+                    // no decoded field
+                })
+                .mockResolvedValueOnce({
+                    success: true,
+                    exit_code: 0,
+                    stack: [{ type: 'slice', slice: REGISTRY }],
+                });
+
+            const passport = await sdk.getPassport(PASSPORT_ADDR);
+
+            expect(passport.ownerAddress).toBe(OWNER_ADDR);
+            expect(passport.capabilities).toBe('translation,summarization');
+            expect(passport.endpoint).toBe('https://agent.example.com/api');
+            expect(passport.txCount).toBe(42);
+            expect(passport.isActive).toBe(true);
+        });
+
+        it('should handle empty stack gracefully', async () => {
+            mockGetNftItemByAddress.mockResolvedValue(makeNftItem());
+            mockExecGetMethod
+                .mockResolvedValueOnce({
+                    success: true,
+                    exit_code: 0,
+                    stack: [],
+                    // no decoded
+                })
+                .mockResolvedValueOnce({
+                    success: true,
+                    exit_code: 0,
+                    stack: [{ type: 'slice', slice: REGISTRY }],
+                });
+
+            const passport = await sdk.getPassport(PASSPORT_ADDR);
+
+            expect(passport.address).toBe(PASSPORT_ADDR);
+            expect(passport.capabilities).toBe('');
+            expect(passport.txCount).toBe(0);
+        });
+    });
+
+    describe('getPassport — error cases', () => {
+        it('should throw PassportNotFoundError when get_passport_data fails', async () => {
+            mockGetNftItemByAddress.mockResolvedValue(makeNftItem());
+            mockExecGetMethod.mockResolvedValueOnce({
+                success: false,
+                exit_code: 1,
+                stack: [],
+            });
+
+            await expect(sdk.getPassport(PASSPORT_ADDR)).rejects.toThrow(PassportNotFoundError);
+        });
+
+        it('should throw PassportNotFoundError when SBT is from wrong registry', async () => {
+            const wrongRegistry = '0:9999999999999999999999999999999999999999999999999999999999999999';
+            mockGetNftItemByAddress.mockResolvedValue(
+                makeNftItem({ collection: { address: wrongRegistry, name: '', description: '' } }),
+            );
+
+            await expect(sdk.getPassport(PASSPORT_ADDR)).rejects.toThrow(PassportNotFoundError);
+        });
+    });
+
+    describe('getPassportMetadata — edge cases', () => {
+        it('should throw when metadata URL is missing', async () => {
+            mockGetNftItemByAddress.mockResolvedValue(makeNftItem());
+            mockExecGetMethod
+                .mockResolvedValueOnce(makePassportDataResult({ metadataUrl: '' }))
+                .mockResolvedValueOnce({
+                    success: true,
+                    exit_code: 0,
+                    stack: [{ type: 'slice', slice: REGISTRY }],
+                });
+
+            await expect(sdk.getPassportMetadata(PASSPORT_ADDR)).rejects.toThrow('no metadata URL');
+        });
+    });
+
+    describe('verifyOwnership — edge cases', () => {
+        it('should return false when NFT lookup fails', async () => {
+            mockGetNftItemByAddress.mockRejectedValue(new Error('Network error'));
+
+            const result = await sdk.verifyOwnership(OWNER_ADDR, PASSPORT_ADDR);
+            expect(result).toBe(false);
+        });
+    });
+
+    describe('hasPassport — edge cases', () => {
+        it('should return false on API error', async () => {
+            mockGetAccountNftItems.mockRejectedValue(new Error('Timeout'));
+
+            const result = await sdk.hasPassport(OWNER_ADDR);
+            expect(result).toBe(false);
+        });
+    });
+
+    describe('listPassports — edge cases', () => {
+        it('should return empty array on API error', async () => {
+            mockGetItemsFromCollection.mockRejectedValue(new Error('500'));
+
+            const result = await sdk.listPassports();
+            expect(result).toEqual([]);
+        });
+
+        it('should skip items that fail to parse', async () => {
+            mockGetItemsFromCollection.mockResolvedValue({
+                nft_items: [makeNftItem(), makeNftItem({ address: '0:bad' })],
+            });
+
+            // First item parses OK
+            mockGetNftItemByAddress.mockResolvedValueOnce(makeNftItem());
+            mockExecGetMethod
+                .mockResolvedValueOnce(makePassportDataResult())
+                .mockResolvedValueOnce({ success: true, exit_code: 0, stack: [{ type: 'slice', slice: REGISTRY }] });
+
+            // Second item throws
+            mockGetNftItemByAddress.mockRejectedValueOnce(new Error('Not found'));
+
+            const result = await sdk.listPassports();
+            expect(result).toHaveLength(1);
+        });
+    });
+
+    describe('searchByCapability — edge cases', () => {
+        it('should return empty array when no passports match', async () => {
+            mockGetItemsFromCollection.mockResolvedValue({
+                nft_items: [makeNftItem()],
+            });
+
+            mockGetNftItemByAddress.mockResolvedValue(makeNftItem());
+            mockExecGetMethod
+                .mockResolvedValueOnce(makePassportDataResult({ capabilities: 'coding' }))
+                .mockResolvedValueOnce({ success: true, exit_code: 0, stack: [{ type: 'slice', slice: REGISTRY }] });
+
+            const results = await sdk.searchByCapability('translation');
+            expect(results).toHaveLength(0);
+        });
+
+        it('should be case-insensitive', async () => {
+            mockGetItemsFromCollection.mockResolvedValue({
+                nft_items: [makeNftItem()],
+            });
+
+            mockGetNftItemByAddress.mockResolvedValue(makeNftItem());
+            mockExecGetMethod
+                .mockResolvedValueOnce(makePassportDataResult({ capabilities: 'Translation,Summarization' }))
+                .mockResolvedValueOnce({ success: true, exit_code: 0, stack: [{ type: 'slice', slice: REGISTRY }] });
+
+            const results = await sdk.searchByCapability('translation');
+            expect(results).toHaveLength(1);
+        });
+    });
 });
 
 describe('Utils', () => {
