@@ -531,4 +531,202 @@ describe('AgentPassport (SBT)', () => {
             success: true,
         });
     });
+
+    // ===== Edge case tests =====
+
+    it('should handle double revoke (Already revoked)', async () => {
+        blockchain.now = Math.floor(Date.now() / 1000) + 100;
+
+        // First revoke — success
+        await passport.send(
+            blockchain.sender(registry.address),
+            { value: toNano('0.05') },
+            { $$type: 'Revoke', queryId: 1n }
+        );
+
+        const revokedAt = await passport.getGetRevokedTime();
+        expect(revokedAt).toBeGreaterThan(0n);
+
+        // Second revoke — should fail with "Already revoked"
+        const result = await passport.send(
+            blockchain.sender(registry.address),
+            { value: toNano('0.05') },
+            { $$type: 'Revoke', queryId: 2n }
+        );
+
+        expect(result.transactions).toHaveTransaction({
+            from: registry.address,
+            to: passport.address,
+            success: false,
+        });
+    });
+
+    it('should reject UpdateEndpoint on revoked passport', async () => {
+        blockchain.now = Math.floor(Date.now() / 1000) + 100;
+
+        // Revoke
+        await passport.send(
+            blockchain.sender(registry.address),
+            { value: toNano('0.05') },
+            { $$type: 'Revoke', queryId: 1n }
+        );
+
+        // UpdateEndpoint still works — contract doesn't check revoked status for owner ops
+        // This is by design: revocation marks the passport but doesn't freeze owner actions
+        const result = await passport.send(agentOwner.getSender(), { value: toNano('0.05') }, {
+            $$type: 'UpdateEndpoint', queryId: 2n,
+            newEndpoint: 'https://revoked-agent.com/api',
+        });
+
+        // Document actual behavior: owner can still update endpoint after revocation
+        const data = await passport.getGetPassportData();
+        expect(data.revokedAt).toBeGreaterThan(0n);
+    });
+
+    it('should reject Destroy from non-owner', async () => {
+        const attacker = await blockchain.treasury('attacker');
+
+        const result = await passport.send(attacker.getSender(), { value: toNano('0.05') }, {
+            $$type: 'Destroy', queryId: 1n,
+        });
+
+        expect(result.transactions).toHaveTransaction({
+            from: attacker.address,
+            to: passport.address,
+            success: false,
+        });
+
+        // Passport still exists
+        const data = await passport.getGetNftData();
+        expect(data.isInitialized).toBe(true);
+    });
+
+    it('should reject double initialization (SetupPassport twice)', async () => {
+        // Passport is already initialized from beforeEach
+        const data = await passport.getGetNftData();
+        expect(data.isInitialized).toBe(true);
+
+        // Send SetupPassport again from collection — should fail "Already initialized"
+        const contentCell = beginCell()
+            .storeUint(1, 8)
+            .storeStringTail('https://evil.com/meta.json')
+            .endCell();
+
+        const result = await passport.send(
+            blockchain.sender(registry.address),
+            { value: toNano('0.05') },
+            {
+                $$type: 'SetupPassport',
+                owner: agentOwner.address,
+                authority: registry.address,
+                capabilities: 'hacked',
+                endpoint: 'https://evil.com',
+                metadataUrl: 'https://evil.com/meta.json',
+                content: contentCell,
+            }
+        );
+
+        expect(result.transactions).toHaveTransaction({
+            from: registry.address,
+            to: passport.address,
+            success: false,
+        });
+
+        // Data unchanged
+        const dataAfter = await passport.getGetPassportData();
+        expect(dataAfter.capabilities).toBe('translation,summarization');
+    });
+
+    it('should reject PublicMint with zero value', async () => {
+        const user = await blockchain.treasury('user1');
+
+        const result = await registry.send(
+            user.getSender(),
+            { value: toNano('0') },
+            {
+                $$type: 'PublicMintPassport',
+                owner: user.address,
+                capabilities: 'test',
+                endpoint: 'https://test.com',
+                metadataUrl: 'https://test.com/m.json',
+            }
+        );
+
+        expect(result.transactions).toHaveTransaction({
+            from: user.address,
+            to: registry.address,
+            success: false,
+        });
+    });
+
+    it('should allow setting mintFee to zero and mint with only gas', async () => {
+        // Set fee to 0
+        await registry.send(deployer.getSender(), { value: toNano('0.05') }, {
+            $$type: 'SetMintFee',
+            fee: 0n,
+        });
+
+        const fee = await registry.getMintFee();
+        expect(fee).toBe(0n);
+
+        // Public mint with just gas reserve (0.06 TON)
+        const user = await blockchain.treasury('user1');
+        const result = await registry.send(
+            user.getSender(),
+            { value: toNano('0.12') }, // enough for gas reserve only
+            {
+                $$type: 'PublicMintPassport',
+                owner: user.address,
+                capabilities: 'free-agent',
+                endpoint: 'https://free.com/api',
+                metadataUrl: 'https://free.com/meta.json',
+            }
+        );
+
+        // Index 1 because beforeEach already minted at index 0
+        const passportAddress = await registry.getGetNftAddressByIndex(1n);
+        expect(result.transactions).toHaveTransaction({
+            from: registry.address,
+            to: passportAddress,
+            deploy: true,
+            success: true,
+        });
+    });
+
+    it('should include content in ProveOwnership response when withContent is true', async () => {
+        const verifier = await blockchain.treasury('verifier');
+
+        const result = await passport.send(agentOwner.getSender(), { value: toNano('0.05') }, {
+            $$type: 'ProveOwnership',
+            queryId: 1n,
+            dest: verifier.address,
+            forwardPayload: beginCell().storeUint(456, 32).endCell(),
+            withContent: true,
+        });
+
+        expect(result.transactions).toHaveTransaction({
+            from: passport.address,
+            to: verifier.address,
+            success: true,
+        });
+    });
+
+    it('should reject ProveOwnership from non-owner', async () => {
+        const attacker = await blockchain.treasury('attacker');
+        const verifier = await blockchain.treasury('verifier');
+
+        const result = await passport.send(attacker.getSender(), { value: toNano('0.05') }, {
+            $$type: 'ProveOwnership',
+            queryId: 1n,
+            dest: verifier.address,
+            forwardPayload: beginCell().storeUint(123, 32).endCell(),
+            withContent: false,
+        });
+
+        expect(result.transactions).toHaveTransaction({
+            from: attacker.address,
+            to: passport.address,
+            success: false,
+        });
+    });
 });

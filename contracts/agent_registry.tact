@@ -183,6 +183,14 @@ contract AgentRegistry with Deployable, Ownable {
         });
     }
 
+    // ===== Bounce handler =====
+
+    // If SetupPassport bounces (e.g. insufficient TON for deploy),
+    // recover the index slot so it can be reused.
+    bounced(msg: bounced<SetupPassport>) {
+        self.nextItemIndex = self.nextItemIndex - 1;
+    }
+
     // ===== Getters =====
 
     // TEP-62: Collection data
